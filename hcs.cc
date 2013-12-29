@@ -91,9 +91,9 @@ class HCS
                 double status = strtol(b.substr(4,7).c_str(), 0, 10)/1000.0;
                 int limited = strtol(b.substr(8,8).c_str(), 0, 10);
 
-                printf("Volt: %.2f\n", voltage);
-                printf("Curr: %.2f\n", status);
-                printf("V*C:  %.2f\n", voltage*status);
+                printf("Volt: %.2f V\n",voltage);
+                printf("Curr: %.2f A\n",status);
+                printf("V*C:  %.2f VA\n",voltage*status);
                 printf("Lim:  %d\n",   limited);
             }
         }
