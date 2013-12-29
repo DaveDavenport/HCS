@@ -109,14 +109,12 @@ class HCS
             char buffer[1024];
             this->send_cmd("SOUT", "0");
             this->read_cmd(buffer, 1024);
-            printf("%s", buffer);
         }
         void set_off ( void )
         {
             char buffer[1024];
             this->send_cmd("SOUT", "1");
             this->read_cmd(buffer, 1024);
-            printf("%s", buffer);
         }
 
         void set_volt ( float value )
@@ -195,12 +193,10 @@ class HCS
                 }
                 else if ( strncmp(command, "on", 2) == 0 )
                 {
-                    printf("on\n");
                     this->set_on();
                 }
                 else if ( strncmp(command, "off", 3) == 0 )
                 {
-                    printf("off\n");
                     this->set_off();
                 }
                 else if ( strncmp(command, "voltage", 7) == 0 )
