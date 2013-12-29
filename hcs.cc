@@ -41,10 +41,10 @@ class HCS
         struct termios oldtio;
 
 
-        void send_cmd (const char *command, const char *arg)
-        {
-            write(fd, command, sizeof(command));
-            write(fd, arg, sizeof(arg));
+        void send_cmd (const char *command, const char *arg) {
+            printf("Send: %s%s\n", command, arg);
+            write(fd, command, strlen(command));
+            write(fd, arg, strlen(arg));
             write(fd, "\r" , 1);
         }
 
@@ -94,7 +94,7 @@ class HCS
                 printf("Volt: %.2f V\n",voltage);
                 printf("Curr: %.2f A\n",status);
                 printf("V*C:  %.2f VA\n",voltage*status);
-                printf("Lim:  %d\n",   limited);
+                printf("Lim:  %s\n",   (limited == 0)?"Voltage":"Current");
             }
         }
 
@@ -111,6 +111,23 @@ class HCS
             this->send_cmd("SOUT", "1");
             this->read_cmd(buffer, 1024);
             printf("%s", buffer);
+        }
+
+        void set_volt ( float value )
+        {
+            char buffer[1024];
+            snprintf(buffer,1024,"%03d", (int)(value*10));
+            printf("voltage: %s\n", buffer);
+            this->send_cmd("VOLT", buffer);
+            this->read_cmd(buffer, 1024);
+            printf("%s\n", buffer);
+        }
+        void set_current ( float value )
+        {
+            char buffer[1024];
+            snprintf(buffer,1024,"%03d", (int)(value*100));
+            this->send_cmd("CURR", buffer);
+            this->read_cmd(buffer, 1024);
         }
 
     public:
@@ -168,6 +185,28 @@ class HCS
                 {
                     printf("off\n");
                     this->set_off();
+                }
+                else if ( strncmp(command, "voltage", 7) == 0 )
+                {
+                    if( argc > i ) {
+                        // write
+                        const char *value = argv[++i];
+                        float volt = strtof(value, nullptr);
+                        this->set_volt(volt);
+                    }else {
+                        // read
+                    }
+                }
+                else if ( strncmp(command, "current", 7) == 0 )
+                {
+                    if( argc > i ) {
+                        // write
+                        const char *value = argv[++i];
+                        float current = strtof(value, nullptr);
+                        this->set_current(current);
+                    }else {
+                        // read
+                    }
                 }
 
             }
