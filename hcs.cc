@@ -42,9 +42,15 @@ class HCS
 
 
         void send_cmd (const char *command, const char *arg) {
-            printf("Send: %s%s\n", command, arg);
+            // Check command.
+            if(command == nullptr ) return;
+            // Write command to str. 
             write(fd, command, strlen(command));
-            write(fd, arg, strlen(arg));
+            if(arg != nullptr ) {
+                // Send argument.
+                write(fd, arg, strlen(arg));
+            }
+            // End line
             write(fd, "\r" , 1);
         }
 
@@ -117,10 +123,8 @@ class HCS
         {
             char buffer[1024];
             snprintf(buffer,1024,"%03d", (int)(value*10));
-            printf("voltage: %s\n", buffer);
             this->send_cmd("VOLT", buffer);
             this->read_cmd(buffer, 1024);
-            printf("%s\n", buffer);
         }
         void set_current ( float value )
         {
@@ -128,6 +132,19 @@ class HCS
             snprintf(buffer,1024,"%03d", (int)(value*100));
             this->send_cmd("CURR", buffer);
             this->read_cmd(buffer, 1024);
+        }
+
+        void get_voltage_current ( double &voltage, double &current )
+        {
+            char buffer[1024];
+            this->send_cmd("GETS", buffer);
+            voltage = current = -1.0;
+            if( this->read_cmd(buffer, 1024) > 5 )
+            {
+                std::string b = buffer;
+                voltage = strtol(b.substr(0,3).c_str(), 0, 10)/10.0;
+                current= strtol(b.substr(3,6).c_str(), 0, 10)/100.0;
+            }
         }
 
     public:
@@ -188,24 +205,30 @@ class HCS
                 }
                 else if ( strncmp(command, "voltage", 7) == 0 )
                 {
-                    if( argc > i ) {
+                    if( argc > (i+1) ) {
                         // write
                         const char *value = argv[++i];
                         float volt = strtof(value, nullptr);
                         this->set_volt(volt);
                     }else {
+                        double voltage, current;
                         // read
+                        this->get_voltage_current(voltage, current);
+                        printf("%.2f\n", voltage);
                     }
                 }
                 else if ( strncmp(command, "current", 7) == 0 )
                 {
-                    if( argc > i ) {
+                    if( argc > (i+1) ) {
                         // write
                         const char *value = argv[++i];
                         float current = strtof(value, nullptr);
                         this->set_current(current);
                     }else {
+                        double voltage, current;
                         // read
+                        this->get_voltage_current(voltage, current);
+                        printf("%.2f\n", current);
                     }
                 }
 
