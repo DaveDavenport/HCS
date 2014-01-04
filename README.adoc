@@ -3,6 +3,7 @@ HCS(1)
 :Author: Qball Cow qball@gmpclient.org
 :doctype: manpage
 :home: /main.html
+:toc:
 
 
 Name
