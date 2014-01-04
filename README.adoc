@@ -35,10 +35,10 @@ Read the output voltage.
 Set the output voltage (in Volts).
 
  * *current*
-Read the output current.
+Read the output current limit.
 
  * *current <value>*:
-Set the output current (in Amps).
+Set the output current limiter (in Amps).
 
  * *off*
 Turn the output off.
