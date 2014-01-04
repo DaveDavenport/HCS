@@ -1,0 +1,85 @@
+HCS(1)
+======
+:Author: Qball Cow qball@gmpclient.org
+:doctype: manpage
+:home: /main.html
+
+
+Name
+----
+HCS - Small command-line tool to control a Voltcraft PPS-11360 Programmable DC Power Supply.
+
+Synopsys
+--------
+hcs ['command']
+
+DESCRIPTION
+-----------
+
+This manual page explains the *HCS* program. The *HCS* program provides basic control for the 
+Programmable DC Power Supply.
+
+The tool allows you to retrieve status from the power supply, set voltage, current and output state.
+
+COMMANDS
+--------
+Multiple commands can be specified in one go.
+
+ * *status*
+Report status from the power supply. (Current voltage, current and active limiter)
+
+ * *voltage*
+Read the output voltage.
+
+ * *voltage <value>*:
+Set the output voltage (in Volts).
+
+ * *current*
+Read the output current.
+
+ * *current <value>*:
+Set the output current (in Amps).
+
+ * *off*
+Turn the output off.
+
+ * *on*
+Turn the output on.
+
+EXAMPLES
+--------
+
+   hcs voltage 5 output 1.3 status
+
+Set the output voltage to 5Volts, the output current limit to 1.3Amps and report the current status.
+
+ENVIRONMENT VARIABLES
+---------------------
+
+HCS obeys the following environment variables:
+
+* *HCS_DEVICE*
+The device node pointing to the serial device of the programmable power supply. 
+
+'Default:'
+
+ /dev/ttyUSB0
+
+
+SUPPORTED DEVICES
+-----------------
+
+The following device(s) are known to work:
+
+ * Voltcraft PPS-11360 
+
+
+BUGS
+----
+
+Please report bugs on the GITHUB issues page: https://github.com/DaveDavenport/hcs
+
+LICENSE
+-------
+
+This program is licensed under GPL 2.0.

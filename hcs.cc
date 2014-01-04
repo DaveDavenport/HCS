@@ -41,122 +41,126 @@ class HCS
         struct termios oldtio;
 
 
-        void send_cmd (const char *command, const char *arg) {
+        void send_cmd ( const char *command, const char *arg ) {
             // Check command.
-            if(command == nullptr ) return;
-            // Write command to str. 
-            write(fd, command, strlen(command));
-            if(arg != nullptr ) {
+            if ( command == nullptr ) return;
+
+            // Write command to str.
+            write( fd, command, strlen( command ) );
+
+            if ( arg != nullptr ) {
                 // Send argument.
-                write(fd, arg, strlen(arg));
+                write( fd, arg, strlen( arg ) );
             }
+
             // End line
-            write(fd, "\r" , 1);
+            write( fd, "\r" , 1 );
         }
 
-        size_t read_cmd (char *buffer, size_t max_length)
-        {
+        size_t read_cmd ( char *buffer, size_t max_length ) {
             size_t size = 0;
-            while(size < 3 ||
+
+            while ( size < 3 ||
                     !(
                         buffer[size-3] == 'O' &&
                         buffer[size-2] == 'K' &&
                         buffer[size-1] == '\n'
-                     )
-                 )
-            {
-                ssize_t v = read(fd, &buffer[size], max_length-size);
+                    )
+                  ) {
+                ssize_t v = read( fd, &buffer[size], max_length-size );
                 buffer[size+1] = '\0';
-                if(buffer[size] == '\r') buffer[size] = '\n';
-                if(v > 0){
+
+                if ( buffer[size] == '\r' ) buffer[size] = '\n';
+
+                if ( v > 0 ) {
                     size+=v;
-                    if(size+1 >= max_length) {
+
+                    if ( size+1 >= max_length ) {
                         return -1;
                     }
-                }else {
-                    printf("%i\n", errno);
-                    printf("%s\n", strerror(errno));
+                } else {
+                    printf( "%i\n", errno );
+                    printf( "%s\n", strerror( errno ) );
                     return -1;
                 }
             }
+
             return size;
         }
 
 
-        void get_status ( void )
-        {
+        void get_status ( void ) {
             char buffer[1024];
             // Send getd mesg.
-            this->send_cmd("GETD",NULL);
+            this->send_cmd( "GETD",NULL );
 
             // Get
-            if( this->read_cmd(buffer, 1024) > 0 )
-            {
+            if ( this->read_cmd( buffer, 1024 ) > 0 ) {
                 std::string b = buffer;
-                double voltage = strtol(b.substr(0,3).c_str(), 0, 10)/10.0;
-                double status = strtol(b.substr(4,7).c_str(), 0, 10)/1000.0;
-                int limited = strtol(b.substr(8,8).c_str(), 0, 10);
+                double voltage = strtol( b.substr( 0,3 ).c_str(), 0, 10 )/10.0;
+                double status = strtol( b.substr( 4,7 ).c_str(), 0, 10 )/1000.0;
+                int limited = strtol( b.substr( 8,8 ).c_str(), 0, 10 );
 
-                printf("Volt: %.2f V\n",voltage);
-                printf("Curr: %.2f A\n",status);
-                printf("V*C:  %.2f VA\n",voltage*status);
-                printf("Lim:  %s\n",   (limited == 0)?"Voltage":"Current");
+                printf( "Volt: %.2f V\n",voltage );
+                printf( "Curr: %.2f A\n",status );
+                printf( "V*C:  %.2f VA\n",voltage*status );
+                printf( "Lim:  %s\n",   ( limited == 0 )?"Voltage":"Current" );
             }
         }
 
-        void set_on ( void )
-        {
+        void set_on ( void ) {
             char buffer[1024];
-            this->send_cmd("SOUT", "0");
-            this->read_cmd(buffer, 1024);
+            this->send_cmd( "SOUT", "0" );
+            this->read_cmd( buffer, 1024 );
         }
-        void set_off ( void )
-        {
+        void set_off ( void ) {
             char buffer[1024];
-            this->send_cmd("SOUT", "1");
-            this->read_cmd(buffer, 1024);
+            this->send_cmd( "SOUT", "1" );
+            this->read_cmd( buffer, 1024 );
         }
 
-        void set_volt ( float value )
-        {
+        void set_volt ( float value ) {
             char buffer[1024];
-            snprintf(buffer,1024,"%03d", (int)(value*10));
-            this->send_cmd("VOLT", buffer);
-            this->read_cmd(buffer, 1024);
+            snprintf( buffer,1024,"%03d", ( int )( value*10 ) );
+            this->send_cmd( "VOLT", buffer );
+            this->read_cmd( buffer, 1024 );
         }
-        void set_current ( float value )
-        {
+        void set_current ( float value ) {
             char buffer[1024];
-            snprintf(buffer,1024,"%03d", (int)(value*100));
-            this->send_cmd("CURR", buffer);
-            this->read_cmd(buffer, 1024);
+            snprintf( buffer,1024,"%03d", ( int )( value*100 ) );
+            this->send_cmd( "CURR", buffer );
+            this->read_cmd( buffer, 1024 );
         }
 
-        void get_voltage_current ( double &voltage, double &current )
-        {
+        void get_voltage_current ( double &voltage, double &current ) {
             char buffer[1024];
-            this->send_cmd("GETS", buffer);
+            this->send_cmd( "GETS", buffer );
             voltage = current = -1.0;
-            if( this->read_cmd(buffer, 1024) > 5 )
-            {
+
+            if ( this->read_cmd( buffer, 1024 ) > 5 ) {
                 std::string b = buffer;
-                voltage = strtol(b.substr(0,3).c_str(), 0, 10)/10.0;
-                current= strtol(b.substr(3,6).c_str(), 0, 10)/100.0;
+                voltage = strtol( b.substr( 0,3 ).c_str(), 0, 10 )/10.0;
+                current= strtol( b.substr( 3,6 ).c_str(), 0, 10 )/100.0;
             }
         }
 
     public:
-        HCS()
-        {
-            fd = open(MODEMDEVICE, O_RDWR | O_NOCTTY );
-
-            if(fd < 0) {
-                printf("failed: %s\n", strerror(errno));
-                // TODO: Error checker.
-                exit(-1);
+        HCS() {
+            if ( getenv( "HCS_DEVICE" ) == nullptr ) {
+                fd = open( MODEMDEVICE, O_RDWR | O_NOCTTY );
+            } else {
+                const char *path = getenv( "HCS_DEVICE" );
+                fd = open( path, O_RDWR | O_NOCTTY );
             }
+
+            if ( fd < 0 ) {
+                printf( "failed: %s\n", strerror( errno ) );
+                // TODO: Error checker.
+                exit( -1 );
+            }
+
             // save status port settings
-            tcgetattr(fd,&oldtio);
+            tcgetattr( fd,&oldtio );
 
             struct termios newtio;
 
@@ -166,65 +170,53 @@ class HCS
             newtio.c_lflag = 0;       //ICANON;
             newtio.c_cc[VMIN]=1;
             newtio.c_cc[VTIME]=0;
-            tcflush(fd, TCIFLUSH);
-            tcsetattr(fd,TCSANOW,&newtio);
+            tcflush( fd, TCIFLUSH );
+            tcsetattr( fd,TCSANOW,&newtio );
         }
 
-        ~HCS()
-        {
-            if(fd != 0) {
+        ~HCS() {
+            if ( fd != 0 ) {
                 // Restore
-                tcsetattr(fd, TCSANOW, &oldtio);
-                close(fd);
+                tcsetattr( fd, TCSANOW, &oldtio );
+                close( fd );
                 fd=0;
             }
         }
 
 
-        int run ( int argc, char **argv )
-        {
-            for ( int i=0; i < argc; i++ )
-            {
+        int run ( int argc, char **argv ) {
+            for ( int i=0; i < argc; i++ ) {
                 const char *command = argv[i];
 
-                if ( strncmp(command, "status", 6) == 0 )
-                {
+                if ( strncmp( command, "status", 6 ) == 0 ) {
                     this->get_status();
-                }
-                else if ( strncmp(command, "on", 2) == 0 )
-                {
+                } else if ( strncmp( command, "on", 2 ) == 0 ) {
                     this->set_on();
-                }
-                else if ( strncmp(command, "off", 3) == 0 )
-                {
+                } else if ( strncmp( command, "off", 3 ) == 0 ) {
                     this->set_off();
-                }
-                else if ( strncmp(command, "voltage", 7) == 0 )
-                {
-                    if( argc > (i+1) ) {
+                } else if ( strncmp( command, "voltage", 7 ) == 0 ) {
+                    if ( argc > ( i+1 ) ) {
                         // write
                         const char *value = argv[++i];
-                        float volt = strtof(value, nullptr);
-                        this->set_volt(volt);
-                    }else {
+                        float volt = strtof( value, nullptr );
+                        this->set_volt( volt );
+                    } else {
                         double voltage, current;
                         // read
-                        this->get_voltage_current(voltage, current);
-                        printf("%.2f\n", voltage);
+                        this->get_voltage_current( voltage, current );
+                        printf( "%.2f\n", voltage );
                     }
-                }
-                else if ( strncmp(command, "current", 7) == 0 )
-                {
-                    if( argc > (i+1) ) {
+                } else if ( strncmp( command, "current", 7 ) == 0 ) {
+                    if ( argc > ( i+1 ) ) {
                         // write
                         const char *value = argv[++i];
-                        float current = strtof(value, nullptr);
-                        this->set_current(current);
-                    }else {
+                        float current = strtof( value, nullptr );
+                        this->set_current( current );
+                    } else {
                         double voltage, current;
                         // read
-                        this->get_voltage_current(voltage, current);
-                        printf("%.2f\n", current);
+                        this->get_voltage_current( voltage, current );
+                        printf( "%.2f\n", current );
                     }
                 }
 
@@ -239,5 +231,5 @@ class HCS
 int main ( int argc, char **argv )
 {
     HCS hcs;
-    return hcs.run(argc, argv);
+    return hcs.run( argc, argv );
 }
