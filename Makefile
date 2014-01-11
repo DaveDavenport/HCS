@@ -1,31 +1,38 @@
-SOURCES=$(wildcard *.cc)
+BUILD_DIR=build
+SOURCES=$(wildcard src/*.cc)
 PROGRAM=hcs
-OBJECTS=$(SOURCES:%.cc=%.o)
+OBJECTS=$(SOURCES:src/%.cc=$(BUILD_DIR)/%.o)
 CXXFLAGS=-std=c++0x -g3 -Wall -Werror
 
 MANPAGE=hcs.1
 PREFIX?=$(HOME)/.local/
 
+all: $(BUILD_DIR)/$(PROGRAM) manpage
 
-all: $(PROGRAM)
+$(BUILD_DIR):
+	mkdir -p $@
 
-$(PROGRAM): $(OBJECTS)
+$(BUILD_DIR)/%.o: src/%.cc | Makefile $(BUILD_DIR)
+	$(CXX) $(CXXFLAGS) -c -o $@ $^
+   
+
+$(BUILD_DIR)/$(PROGRAM): $(OBJECTS)
 	$(CXX) -o $@ $^
 
 clean:
-	rm -rf $(OBJECTS) $(PROGRAM) $(MANPAGE)
+	rm -rf $(BUILD_DIR)
 
 
-install: $(PROGRAM) |  manpage
+install: $(BUILD_DIR)/$(PROGRAM) |  manpage
+	install -d $(PREFIX)/share/man/man1/
 	install $^ $(PREFIX)/bin/
-	install -d $(PREFIX)/share/man/man1/ $(PREFIX)/share/$(PROGRAM)/
-	install hcs.1 $(PREFIX)/share/man/man1/
+	install $(BUILD_DIR)/$(MANPAGE) $(PREFIX)/share/man/man1/$(MANPAGE)
 
 
-manpage: $(MANPAGE)
+manpage: $(BUILD_DIR)/$(MANPAGE) | $(BUILD_DIR)
 
-$(MANPAGE): README.adoc
-	a2x --doctype manpage --format manpage README.adoc 
+$(BUILD_DIR)/$(MANPAGE): doc/README.adoc
+	a2x --doctype manpage --format manpage doc/README.adoc -D $(BUILD_DIR)/
 
 indent:
-	@astyle --style=linux -S -C -D -N -H -L -W3 -f $(SOURCES) 
+	@astyle --style=linux -S -C -D -N -H -L -W3 -f $(SOURCES)
