@@ -3,6 +3,7 @@ SOURCES=$(wildcard src/*.cc)
 PROGRAM=hcs
 OBJECTS=$(SOURCES:src/%.cc=$(BUILD_DIR)/%.o)
 CXXFLAGS=-std=c++0x -g3 -Wall -Werror
+QUIET?=@
 
 MANPAGE=hcs.1
 PREFIX?=$(HOME)/.local/
@@ -10,14 +11,17 @@ PREFIX?=$(HOME)/.local/
 all: $(BUILD_DIR)/$(PROGRAM) manpage
 
 $(BUILD_DIR):
-	mkdir -p $@
+	$(info Create:       Build directory)
+	$(QUIET)mkdir -p $@
 
 $(BUILD_DIR)/%.o: src/%.cc | Makefile $(BUILD_DIR)
-	$(CXX) $(CXXFLAGS) -c -o $@ $^
+	$(info Build object: $^ -> $@)
+	$(QUIET)$(CXX) $(CXXFLAGS) -c -o $@ $^
    
 
 $(BUILD_DIR)/$(PROGRAM): $(OBJECTS)
-	$(CXX) -o $@ $^
+	$(info Link program: $@)
+	$(QUIET)$(CXX) -o $@ $^
 
 clean:
 	rm -rf $(BUILD_DIR)
@@ -32,7 +36,9 @@ install: $(BUILD_DIR)/$(PROGRAM) |  manpage
 manpage: $(BUILD_DIR)/$(MANPAGE) | $(BUILD_DIR)
 
 $(BUILD_DIR)/$(MANPAGE): doc/README.adoc
-	a2x --doctype manpage --format manpage doc/README.adoc -D $(BUILD_DIR)/
+	$(info Create manpage: $@ -> $^ )	
+	$(QUIET)a2x --doctype manpage --format manpage doc/README.adoc -D $(BUILD_DIR)/
 
-indent:
-	@astyle --style=linux -S -C -D -N -H -L -W3 -f $(SOURCES)
+indent: $(SOURCES)
+	$(info Indent source files: $^)
+	@astyle --style=linux -S -C -D -N -H -L -W3 -f $^
