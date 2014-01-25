@@ -47,6 +47,9 @@ Turn the output off.
  * *on*
 Turn the output on.
 
+ * *interactive*
+Go into interactive mode.
+
 EXAMPLES
 --------
 

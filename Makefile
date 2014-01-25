@@ -2,7 +2,7 @@ BUILD_DIR=build
 SOURCES=$(wildcard src/*.cc)
 PROGRAM=hcs
 OBJECTS=$(SOURCES:src/%.cc=$(BUILD_DIR)/%.o)
-CXXFLAGS=-std=c++0x -g3 -Wall -Werror
+CXXFLAGS=-std=c++0x -g3 -Wall -Werror 
 QUIET?=@
 
 MANPAGE=hcs.1
@@ -21,7 +21,7 @@ $(BUILD_DIR)/%.o: src/%.cc | Makefile $(BUILD_DIR)
 
 $(BUILD_DIR)/$(PROGRAM): $(OBJECTS)
 	$(info Link program: $@)
-	$(QUIET)$(CXX) -o $@ $^
+	$(QUIET)$(CXX) -o $@ $^ -lreadline
 
 clean:
 	rm -rf $(BUILD_DIR)

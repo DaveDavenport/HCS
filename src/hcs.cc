@@ -24,6 +24,7 @@
 #include <string.h>
 #include <string>
 #include <errno.h>
+#include <readline/readline.h>
 
 #define BAUDRATE B9600
 #define MODEMDEVICE "/dev/ttyUSB0"
@@ -100,9 +101,12 @@ class HCS
                 double voltage = strtol( b.substr( 0,3 ).c_str(), 0, 10 )/10.0;
                 double status = strtol( b.substr( 4,7 ).c_str(), 0, 10 )/1000.0;
                 int limited = strtol( b.substr( 8,8 ).c_str(), 0, 10 );
+                double set_voltage, set_current;
+                // read
+                this->get_voltage_current( set_voltage, set_current );
 
-                printf( "Volt: %.2f V\n",voltage );
-                printf( "Curr: %.2f A\n",status );
+                printf( "Volt: %.2f V (Set %.2f V)\n",voltage, set_voltage );
+                printf( "Curr: %.2f A (Set %.2f A)\n",status, set_current );
                 printf( "V*C:  %.2f VA\n",voltage*status );
                 printf( "Lim:  %s\n",   ( limited == 0 )?"Voltage":"Current" );
             }
@@ -183,43 +187,96 @@ class HCS
             }
         }
 
+        /**
+         * Small interactive GUI for controlling power supply
+         */
+        int interactive() {
+            while ( TRUE ) {
+                char *message = readline( "> " );
+
+                if ( message == NULL ) break;
+
+                if ( strcasecmp( message, "q" ) == 0||
+                     strcasecmp( message, "quiet" ) == 0 ) {
+                    printf( "Quit\n" );
+                    free( message );
+                    break;
+                }
+
+                if ( message[0] != '\0' ) {
+                    //parse into arguments
+                    int argc = 0;
+                    char **argv = NULL;
+                    char *p;
+
+                    for ( p = strtok( message, " " ); p != NULL; p = strtok( NULL, " " ) ) {
+                        argv = ( char ** )realloc( argv, ( argc+2 )*sizeof( *argv ) );
+                        argv[argc] = p;
+                        argv[argc+1] = NULL;
+                        argc++;
+                    }
+
+                    for ( int i=0; i < argc; i++ ) {
+                        i+=this->parse_command( argc-i, &argv[i] );
+                    }
+
+                    if ( argv )free( argv );
+                }
+
+                free( message );
+            }
+
+            return EXIT_SUCCESS;
+        }
+        int parse_command( int argc, char **argv ) {
+            int index = 0;
+            const char *command = argv[0];
+
+            if ( strncmp( command, "status", 6 ) == 0 ) {
+                this->get_status();
+            } else if ( strncmp( command, "on", 2 ) == 0 ) {
+                this->set_on();
+            } else if ( strncmp( command, "off", 3 ) == 0 ) {
+                this->set_off();
+            } else if ( strncmp( command, "voltage", 7 ) == 0 ) {
+                if ( argc > ( index+1 ) ) {
+                    // write
+                    const char *value = argv[++index];
+                    float volt = strtof( value, nullptr );
+                    this->set_volt( volt );
+                } else {
+                    double voltage, current;
+                    // read
+                    this->get_voltage_current( voltage, current );
+                    printf( "%.2f\n", voltage );
+                }
+            } else if ( strncmp( command, "current", 7 ) == 0 ) {
+                if ( argc > ( index+1 ) ) {
+                    // write
+                    const char *value = argv[++index];
+                    float current = strtof( value, nullptr );
+                    this->set_current( current );
+                } else {
+                    double voltage, current;
+                    // read
+                    this->get_voltage_current( voltage, current );
+                    printf( "%.2f\n", current );
+                }
+            }
+
+            return index;
+        }
+
 
         int run ( int argc, char **argv ) {
             for ( int i=0; i < argc; i++ ) {
                 const char *command = argv[i];
 
-                if ( strncmp( command, "status", 6 ) == 0 ) {
-                    this->get_status();
-                } else if ( strncmp( command, "on", 2 ) == 0 ) {
-                    this->set_on();
-                } else if ( strncmp( command, "off", 3 ) == 0 ) {
-                    this->set_off();
-                } else if ( strncmp( command, "voltage", 7 ) == 0 ) {
-                    if ( argc > ( i+1 ) ) {
-                        // write
-                        const char *value = argv[++i];
-                        float volt = strtof( value, nullptr );
-                        this->set_volt( volt );
-                    } else {
-                        double voltage, current;
-                        // read
-                        this->get_voltage_current( voltage, current );
-                        printf( "%.2f\n", voltage );
-                    }
-                } else if ( strncmp( command, "current", 7 ) == 0 ) {
-                    if ( argc > ( i+1 ) ) {
-                        // write
-                        const char *value = argv[++i];
-                        float current = strtof( value, nullptr );
-                        this->set_current( current );
-                    } else {
-                        double voltage, current;
-                        // read
-                        this->get_voltage_current( voltage, current );
-                        printf( "%.2f\n", current );
-                    }
+                if ( strncmp( command, "interactive", 11 ) == 0 ) {
+                    return this->interactive();
+                } else  {
+                    i += this->parse_command( argc-i,&argv[i] );
                 }
-
             }
 
             return EXIT_FAILURE;
