@@ -544,6 +544,14 @@ float get_voltage_actual () throw( PSUError & )
     return ( nominal_voltage * voltage ) / 256.0e2;
 }
 
+int get_operating_mode () throw( PSUError &)
+{
+    telegram_start ( RECEIVE, 6);
+    telegram_set_object ( STATUS_ACTUAL );
+    telegram_send ();
+    // bits 2+1: 10->CC, 00->CV
+    return ( _telegram[4] & 6);
+}
 void set_voltage ( float value ) throw( PSUError & )
 {
     uint32_t val = ( value * 25600 ) / nominal_voltage;
@@ -603,6 +611,7 @@ void print_device_info () throw( PSUError & )
     printf ( " Set current:      %20.02f\n", this->get_current () );
     printf ( " Current voltage:  %20.02f\n", this->get_voltage_actual () );
     printf ( " Current current:  %20.02f\n", this->get_current_actual () );
+    printf ( " Current mode:     %20s\n",    (this->get_operating_mode () == 4) ? "CC" : "CV" );
 }
 
 
