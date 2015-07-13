@@ -1,2 +1,4 @@
 language: c++
 
+before_script:
+  - autoreconf -i
