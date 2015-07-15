@@ -163,6 +163,19 @@ virtual float get_current () throw( PSUError & ) = 0;
  */
 virtual void set_voltage ( const float value ) throw( PSUError & ) = 0;
 
+virtual void set_over_voltage ( const float value ) throw( PSUError & ) {
+    throw PSUError("Current feature is not supported for this power supply");
+}
+virtual void set_over_current ( const float value ) throw( PSUError & ) {
+    throw PSUError("Current feature is not supported for this power supply");
+}
+virtual float get_over_voltage ( ) throw( PSUError & ) {
+    throw PSUError("Current feature is not supported for this power supply");
+}
+virtual float get_over_current ( ) throw( PSUError & ) {
+    throw PSUError("Current feature is not supported for this power supply");
+}
+
 /**
  * @param value the output current (in Amps)
  * Set the output current.
@@ -245,7 +258,7 @@ struct
     { OBJECT_LENGTH_INVALID, "Object length incorrect"                    },
     { ACCESS_VIOLATION,      "Read/Write permissions violated, no access" },
     { DEVICE_LOCKED,         "Device is in \"Lock\" state"                },
-    { OBJECT_OVERFLOW,       "Upper limit of object exceeded"             },
+    { OBJECT_OVERFLOW,       "Upper limit of object exceeded"             }
 };
 // See object table manual.
 enum ObjectTypes
@@ -537,11 +550,28 @@ float get_current_actual () throw( PSUError & )
 }
 float get_voltage_actual () throw( PSUError & )
 {
-    telegram_start ( RECEIVE, 6 );
+    telegram_start ( RECEIVE, 2 );
     telegram_set_object ( STATUS_ACTUAL );
     telegram_send ();
     float voltage = to_uint16 ( &_telegram[5] );
     return ( nominal_voltage * voltage ) / 256.0e2;
+}
+
+float get_over_voltage() throw ( PSUError & )
+{
+    telegram_start ( RECEIVE, 2 );
+    telegram_set_object ( OVP_THRESHOLD );
+    telegram_send ();
+    float voltage = to_uint16 ( &_telegram[3] );
+    return ( nominal_voltage * voltage ) / 256.0e2;
+}
+float get_over_current () throw ( PSUError & )
+{
+    telegram_start ( RECEIVE, 6 );
+    telegram_set_object ( OCP_THRESHOLD );
+    telegram_send ();
+    float current = to_uint16 ( &_telegram[3] );
+    return ( nominal_current * current ) / 256.0e2;
 }
 
 int get_operating_mode () throw( PSUError &)
@@ -570,7 +600,25 @@ void set_current ( float value ) throw( PSUError & )
     telegram_push ( val & 0xFF );
     telegram_send ();
 }
+void set_over_voltage ( float value ) throw( PSUError & )
+{
+    uint32_t val = ( value * 25600 ) / nominal_voltage;
+    telegram_start ( SEND, 2 );
+    telegram_set_object ( OVP_THRESHOLD );
+    telegram_push ( ( val >> 8 ) & 0xFF );
+    telegram_push ( val & 0xFF );
+    telegram_send ();
+}
 
+void set_over_current ( float value ) throw( PSUError & )
+{
+    uint32_t val = ( value * 25600 ) / nominal_current ;
+    telegram_start ( SEND, 2 );
+    telegram_set_object ( OCP_THRESHOLD );
+    telegram_push ( ( val >> 8 ) & 0xFF );
+    telegram_push ( val & 0xFF );
+    telegram_send ();
+}
 
 void print_device_info () throw( PSUError & )
 {
@@ -607,6 +655,8 @@ void print_device_info () throw( PSUError & )
     printf ( " Nominal current:  %20.02f\n", nominal_current );
     printf ( " Nominal power:    %20.02f\n", nominal_power );
 
+    printf ( " Set OVP:          %20.02f\n", this->get_over_voltage () );
+    printf ( " Set OCP:          %20.02f\n", this->get_over_current () );
     printf ( " Set voltage:      %20.02f\n", this->get_voltage () );
     printf ( " Set current:      %20.02f\n", this->get_current () );
     printf ( " Current voltage:  %20.02f\n", this->get_voltage_actual () );
@@ -926,6 +976,34 @@ int parse_command ( int argc, char **argv )
             else if ( strncmp ( command, "off", 3 ) == 0 )
             {
                 this->power_supply->state_disable ();
+            }
+            else if ( strncmp ( command, "ovp" , 3) == 0 )
+            {
+                if ( argc > ( index + 1 ) )
+                {
+                    // write
+                    const char *value = argv[++index];
+                    float      volt   = strtof ( value, nullptr );
+                    this->power_supply->set_over_voltage(volt);
+
+                }else{
+                    float voltage = this->power_supply->get_over_voltage();
+                    printf ( "%.2f\n", voltage );
+                }
+            }
+            else if ( strncmp ( command, "ocp" , 3) == 0 )
+            {
+                if ( argc > ( index + 1 ) )
+                {
+                    // write
+                    const char *value = argv[++index];
+                    float      curr   = strtof ( value, nullptr );
+                    this->power_supply->set_over_current(curr);
+
+                }else{
+                    float current = this->power_supply->get_over_current();
+                    printf ( "%.2f\n", current );
+                }
             }
             else if ( strncmp ( command, "voltage", 7 ) == 0 )
             {
