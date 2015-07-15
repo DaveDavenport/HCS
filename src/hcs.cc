@@ -175,6 +175,11 @@ virtual float get_over_current ( ) throw( PSUError & )
     throw PSUError ( "Current feature is not supported for this power supply" );
 }
 
+virtual int get_operating_mode () throw ( PSUError & )
+{
+    throw PSUError ( "Current feature is not supported for this power supply" );
+}
+
 /**
  * @param value the output current (in Amps)
  * Set the output current.
@@ -568,7 +573,7 @@ int get_operating_mode () throw( PSUError & )
     telegram_set_object ( STATUS_ACTUAL );
     telegram_send ();
     // bits 2+1: 10->CC, 00->CV
-    return _telegram[4] & 6;
+    return ( _telegram[4] & 6 ) >> 2;
 }
 void set_voltage ( float value ) throw( PSUError & )
 {
@@ -649,7 +654,7 @@ void print_device_info () throw( PSUError & )
     printf ( " Set current:      %20.02f\n", this->get_current () );
     printf ( " Current voltage:  %20.02f\n", this->get_voltage_actual () );
     printf ( " Current current:  %20.02f\n", this->get_current_actual () );
-    printf ( " Current mode:     %20s\n", ( this->get_operating_mode () == 4 ) ? "CC" : "CV" );
+    printf ( " Current mode:     %20s\n", ( this->get_operating_mode () == 1 ) ? "CC" : "CV" );
 }
 
 
@@ -959,6 +964,9 @@ int parse_command ( int argc, char **argv )
                     float current = this->power_supply->get_over_current ();
                     printf ( "%.2f\n", current );
                 }
+            }
+            else if ( strncmp ( command, "mode", 4 ) == 0 ) {
+                printf ( "%s", this->power_supply->get_operating_mode () == 1 ? "CC" : "CV" );
             }
             else if ( strncmp ( command, "voltage", 7 ) == 0 ) {
                 if ( argc > ( index + 1 ) ) {
