@@ -12,3 +12,6 @@ AM_CXXFLAGS=\
 
 hcs_SOURCES=\
     src/hcs.cc
+
+indent: ${hcs_SOURCES}
+	uncrustify -c ${top_srcdir}/data/uncrustify.cfg --replace $^

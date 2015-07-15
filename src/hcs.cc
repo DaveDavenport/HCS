@@ -78,8 +78,7 @@ virtual void uninitialize () = 0;
 public:
 virtual ~PSU()
 {
-    if ( fd >= 0 )
-    {
+    if ( fd >= 0 ) {
         close_device ();
     }
 }
@@ -89,12 +88,10 @@ virtual ~PSU()
  */
 virtual void open_device ()
 {
-    if ( getenv ( "HCS_DEVICE" ) == nullptr )
-    {
+    if ( getenv ( "HCS_DEVICE" ) == nullptr ) {
         open_device ( MODEMDEVICE );
     }
-    else
-    {
+    else{
         const char *path = getenv ( "HCS_DEVICE" );
         open_device ( path );
     }
@@ -108,8 +105,7 @@ virtual void open_device ()
 virtual void open_device ( const char *dev_node ) throw ( PSUError & )
 {
     fd = open ( dev_node, O_RDWR | O_NOCTTY );
-    if ( fd < 0 )
-    {
+    if ( fd < 0 ) {
         printf ( "failed: %s\n", strerror ( errno ) );
         // TODO: THROW error
         std::string name = std::string ( "Failed to open \"" ) + dev_node + "\": '" + strerror ( errno ) + "'";
@@ -137,8 +133,7 @@ virtual void open_device ( const char *dev_node ) throw ( PSUError & )
  */
 virtual void close_device ()
 {
-    if ( fd < 0 )
-    {
+    if ( fd < 0 ) {
         // throw error.
         throw PSUError ( "Close device: Device already closed" );
     }
@@ -163,17 +158,21 @@ virtual float get_current () throw( PSUError & ) = 0;
  */
 virtual void set_voltage ( const float value ) throw( PSUError & ) = 0;
 
-virtual void set_over_voltage ( const float value ) throw( PSUError & ) {
-    throw PSUError("Current feature is not supported for this power supply");
+virtual void set_over_voltage ( const float value ) throw( PSUError & )
+{
+    throw PSUError ( "Current feature is not supported for this power supply" );
 }
-virtual void set_over_current ( const float value ) throw( PSUError & ) {
-    throw PSUError("Current feature is not supported for this power supply");
+virtual void set_over_current ( const float value ) throw( PSUError & )
+{
+    throw PSUError ( "Current feature is not supported for this power supply" );
 }
-virtual float get_over_voltage ( ) throw( PSUError & ) {
-    throw PSUError("Current feature is not supported for this power supply");
+virtual float get_over_voltage ( ) throw( PSUError & )
+{
+    throw PSUError ( "Current feature is not supported for this power supply" );
 }
-virtual float get_over_current ( ) throw( PSUError & ) {
-    throw PSUError("Current feature is not supported for this power supply");
+virtual float get_over_current ( ) throw( PSUError & )
+{
+    throw PSUError ( "Current feature is not supported for this power supply" );
 }
 
 /**
@@ -293,8 +292,7 @@ uint8_t _telegram_size = 0;
 
 void telegram_validate ()
 {
-    if ( _telegram[0] == 0 )
-    {
+    if ( _telegram[0] == 0 ) {
         // Throw error.
     }
 }
@@ -325,10 +323,8 @@ void telegram_push ( uint8_t val )
 }
 const char *telegram_get_error ( ErrorTypes type ) const
 {
-    for ( int i = 0; i < 10; i++ )
-    {
-        if ( ErrorTypeStr[i].type == type )
-        {
+    for ( int i = 0; i < 10; i++ ) {
+        if ( ErrorTypeStr[i].type == type ) {
             return ErrorTypeStr[i].name;
         }
     }
@@ -336,8 +332,7 @@ const char *telegram_get_error ( ErrorTypes type ) const
 }
 void telegram_send ()
 {
-    if ( _telegram[0] == 0 )
-    {
+    if ( _telegram[0] == 0 ) {
         // Throw error.
     }
     telegram_crc_set ();
@@ -351,8 +346,7 @@ void telegram_send ()
     // Receive answer
     telegram_receive ();
     // Check error
-    if ( _telegram[2] == 0xFF && _telegram[3] != 0 )
-    {
+    if ( _telegram[2] == 0xFF && _telegram[3] != 0 ) {
         ErrorTypes  type = (ErrorTypes) _telegram[3];
         std::string name = std::string ( "PSU reported error: " );
         name += telegram_get_error ( type );
@@ -363,27 +357,23 @@ void telegram_send ()
 }
 void telegram_receive ()
 {
-    if ( _telegram[0] != 0 )
-    {
+    if ( _telegram[0] != 0 ) {
         // Throw error.
     }
     // Read header first.
     size_t ss = 3;
-    do
-    {
+    do {
         ss -= read ( fd, &_telegram[3 - ss], ss );
     } while ( ss > 0 );
 
     // Calculate remainder of size.
     _telegram_size = 3 + ( ( _telegram[0] ) & 0x0F ) + 1 + 2;
     ss             = _telegram_size - 3;
-    do
-    {
+    do {
         ss -= read ( fd, &_telegram[_telegram_size - ss], ss );
     } while ( ss > 0 );
 
-    if ( !telegram_crc_check () )
-    {
+    if ( !telegram_crc_check () ) {
         throw PSUError ( "Message Invalid, CRC failure" );
     }
 }
@@ -401,8 +391,7 @@ void telegram_crc_set ()
 static int crc16 ( uint8_t *ba, int size )
 {
     int work = 0;
-    for ( int i = 0; i < size; i++ )
-    {
+    for ( int i = 0; i < size; i++ ) {
         work += ba[i];
     }
     return work & 0xFFFF;
@@ -415,8 +404,7 @@ bool telegram_crc_check ()
 {
     int16_t crc = crc16 ( _telegram, _telegram_size - 2 );
     if ( ( _telegram[_telegram_size - 2] == ( ( crc >> 8 ) & 0xFF ) ) &&
-         ( _telegram[_telegram_size - 1] == ( ( crc ) & 0xFF ) ) )
-    {
+         ( _telegram[_telegram_size - 1] == ( ( crc ) & 0xFF ) ) ) {
         return true;
     }
     return false;
@@ -521,7 +509,7 @@ bool get_state () throw( PSUError & )
     telegram_start ( RECEIVE, 6 );
     telegram_set_object ( STATUS_ACTUAL );
     telegram_send ();
-    return ( ( _telegram[4] & 1 ) == 1 );
+    return ( _telegram[4] & 1 ) == 1;
 }
 
 float get_current () throw( PSUError & )
@@ -557,7 +545,7 @@ float get_voltage_actual () throw( PSUError & )
     return ( nominal_voltage * voltage ) / 256.0e2;
 }
 
-float get_over_voltage() throw ( PSUError & )
+float get_over_voltage () throw ( PSUError & )
 {
     telegram_start ( RECEIVE, 2 );
     telegram_set_object ( OVP_THRESHOLD );
@@ -574,13 +562,13 @@ float get_over_current () throw ( PSUError & )
     return ( nominal_current * current ) / 256.0e2;
 }
 
-int get_operating_mode () throw( PSUError &)
+int get_operating_mode () throw( PSUError & )
 {
-    telegram_start ( RECEIVE, 6);
+    telegram_start ( RECEIVE, 6 );
     telegram_set_object ( STATUS_ACTUAL );
     telegram_send ();
     // bits 2+1: 10->CC, 00->CV
-    return ( _telegram[4] & 6);
+    return _telegram[4] & 6;
 }
 void set_voltage ( float value ) throw( PSUError & )
 {
@@ -612,7 +600,7 @@ void set_over_voltage ( float value ) throw( PSUError & )
 
 void set_over_current ( float value ) throw( PSUError & )
 {
-    uint32_t val = ( value * 25600 ) / nominal_current ;
+    uint32_t val = ( value * 25600 ) / nominal_current;
     telegram_start ( SEND, 2 );
     telegram_set_object ( OCP_THRESHOLD );
     telegram_push ( ( val >> 8 ) & 0xFF );
@@ -661,7 +649,7 @@ void print_device_info () throw( PSUError & )
     printf ( " Set current:      %20.02f\n", this->get_current () );
     printf ( " Current voltage:  %20.02f\n", this->get_voltage_actual () );
     printf ( " Current current:  %20.02f\n", this->get_current_actual () );
-    printf ( " Current mode:     %20s\n",    (this->get_operating_mode () == 4) ? "CC" : "CV" );
+    printf ( " Current mode:     %20s\n", ( this->get_operating_mode () == 4 ) ? "CC" : "CV" );
 }
 
 
@@ -671,8 +659,7 @@ EAPS2K() : PSU ( B115200 )
 
 ~EAPS2K()
 {
-    if ( this->fd >= 0 )
-    {
+    if ( this->fd >= 0 ) {
         this->disable_remote ();
     }
 }
@@ -707,8 +694,7 @@ float get_voltage_actual () throw( PSUError & )
     char buffer[1024];
     // Send getd mesg.
     this->send_cmd ( "GETD", NULL );
-    if ( this->read_cmd ( buffer, 1024 ) > 0 )
-    {
+    if ( this->read_cmd ( buffer, 1024 ) > 0 ) {
         std::string b       = buffer;
         float       voltage = strtol ( b.substr ( 0, 3 ).c_str (), 0, 10 ) / 10.0f;
         return voltage;
@@ -720,8 +706,7 @@ float get_current_actual () throw( PSUError & )
     char buffer[1024];
     // Send getd mesg.
     this->send_cmd ( "GETD", NULL );
-    if ( this->read_cmd ( buffer, 1024 ) > 0 )
-    {
+    if ( this->read_cmd ( buffer, 1024 ) > 0 ) {
         std::string b       = buffer;
         float       current = strtol ( b.substr ( 4, 7 ).c_str (), 0, 10 ) / 1000.0f;
         return current;
@@ -735,8 +720,7 @@ void print_device_info ( void ) throw ( PSUError & )
     this->send_cmd ( "GETD", NULL );
 
     // Get
-    if ( this->read_cmd ( buffer, 1024 ) > 0 )
-    {
+    if ( this->read_cmd ( buffer, 1024 ) > 0 ) {
         std::string b       = buffer;
         float       voltage = strtol ( b.substr ( 0, 3 ).c_str (), 0, 10 ) / 10.0;
         float       current = strtol ( b.substr ( 4, 7 ).c_str (), 0, 10 ) / 1000.0;
@@ -791,8 +775,7 @@ void get_voltage_current ( float &voltage, float &current )
     this->send_cmd ( "GETS", buffer );
     voltage = current = -1.0;
 
-    if ( this->read_cmd ( buffer, 1024 ) > 5 )
-    {
+    if ( this->read_cmd ( buffer, 1024 ) > 5 ) {
         std::string b = buffer;
         voltage = strtol ( b.substr ( 0, 3 ).c_str (), 0, 10 ) / 10.0;
         current = strtol ( b.substr ( 3, 6 ).c_str (), 0, 10 ) / 100.0;
@@ -803,16 +786,14 @@ void get_voltage_current ( float &voltage, float &current )
 void send_cmd ( const char *command, const char *arg )
 {
     // Check command.
-    if ( command == nullptr )
-    {
+    if ( command == nullptr ) {
         return;
     }
 
     // Write command to str.
     write ( fd, command, strlen ( command ) );
 
-    if ( arg != nullptr )
-    {
+    if ( arg != nullptr ) {
         // Send argument.
         write ( fd, arg, strlen ( arg ) );
     }
@@ -831,27 +812,22 @@ size_t read_cmd ( char *buffer, size_t max_length )
                 buffer[size - 2] == 'K' &&
                 buffer[size - 1] == '\n'
                 )
-            )
-    {
+            ) {
         ssize_t v = read ( fd, &buffer[size], max_length - size );
         buffer[size + 1] = '\0';
 
-        if ( buffer[size] == '\r' )
-        {
+        if ( buffer[size] == '\r' ) {
             buffer[size] = '\n';
         }
 
-        if ( v > 0 )
-        {
+        if ( v > 0 ) {
             size += v;
 
-            if ( size + 1 >= max_length )
-            {
+            if ( size + 1 >= max_length ) {
                 return -1;
             }
         }
-        else
-        {
+        else{
             printf ( "%i\n", errno );
             printf ( "%s\n", strerror ( errno ) );
             return -1;
@@ -871,8 +847,7 @@ PSU            *power_supply = nullptr;
 public:
 ~HCS()
 {
-    if ( this->power_supply != nullptr )
-    {
+    if ( this->power_supply != nullptr ) {
         delete this->power_supply;
         this->power_supply = nullptr;
     }
@@ -887,50 +862,42 @@ HCS()
  */
 int interactive ()
 {
-    while ( TRUE )
-    {
+    while ( TRUE ) {
         char *message = readline ( "> " );
 
-        if ( message == NULL )
-        {
+        if ( message == NULL ) {
             break;
         }
 
         if ( strcasecmp ( message, "q" ) == 0 ||
-             strcasecmp ( message, "quit" ) == 0 )
-        {
+             strcasecmp ( message, "quit" ) == 0 ) {
             printf ( "Quit\n" );
             free ( message );
             break;
         }
 
-        if ( message[0] != '\0' )
-        {
+        if ( message[0] != '\0' ) {
             //parse into arguments
             int  argc   = 0;
             char **argv = NULL;
             char *p;
 
-            for ( p = strtok ( message, " " ); p != NULL; p = strtok ( NULL, " " ) )
-            {
+            for ( p = strtok ( message, " " ); p != NULL; p = strtok ( NULL, " " ) ) {
                 argv           = ( char * * ) realloc ( argv, ( argc + 2 ) * sizeof ( *argv ) );
                 argv[argc]     = p;
                 argv[argc + 1] = NULL;
                 argc++;
             }
 
-            for ( int i = 0; i < argc; i++ )
-            {
+            for ( int i = 0; i < argc; i++ ) {
                 int retv = this->parse_command ( argc - i, &argv[i] );
-                if ( retv < 0 )
-                {
+                if ( retv < 0 ) {
                     return EXIT_FAILURE;
                 }
                 i += retv;
             }
 
-            if ( argv )
-            {
+            if ( argv ) {
                 free ( argv );
             }
         }
@@ -945,94 +912,76 @@ int parse_command ( int argc, char **argv )
     int        index    = 0;
     const char *command = argv[0];
     try {
-        if ( strncmp ( command, "pps", 3 ) == 0 )
-        {
-            if ( this->power_supply != nullptr )
-            {
+        if ( strncmp ( command, "pps", 3 ) == 0 ) {
+            if ( this->power_supply != nullptr ) {
                 delete this->power_supply;
             }
             this->power_supply = new PPS11360 ();
             this->power_supply->open_device ();
         }
-        else if ( strncmp ( command, "eaps", 4 ) == 0 )
-        {
-            if ( this->power_supply != nullptr )
-            {
+        else if ( strncmp ( command, "eaps", 4 ) == 0 ) {
+            if ( this->power_supply != nullptr ) {
                 delete this->power_supply;
             }
             this->power_supply = new EAPS2K ();
             this->power_supply->open_device ();
         }
-        else if ( this->power_supply != nullptr )
-        {
-            if ( strncmp ( command, "status", 6 ) == 0 )
-            {
+        else if ( this->power_supply != nullptr ) {
+            if ( strncmp ( command, "status", 6 ) == 0 ) {
                 this->power_supply->print_device_info ();
             }
-            else if ( strncmp ( command, "on", 2 ) == 0 )
-            {
+            else if ( strncmp ( command, "on", 2 ) == 0 ) {
                 this->power_supply->state_enable ();
             }
-            else if ( strncmp ( command, "off", 3 ) == 0 )
-            {
+            else if ( strncmp ( command, "off", 3 ) == 0 ) {
                 this->power_supply->state_disable ();
             }
-            else if ( strncmp ( command, "ovp" , 3) == 0 )
-            {
-                if ( argc > ( index + 1 ) )
-                {
+            else if ( strncmp ( command, "ovp", 3 ) == 0 ) {
+                if ( argc > ( index + 1 ) ) {
                     // write
                     const char *value = argv[++index];
                     float      volt   = strtof ( value, nullptr );
-                    this->power_supply->set_over_voltage(volt);
-
-                }else{
-                    float voltage = this->power_supply->get_over_voltage();
+                    this->power_supply->set_over_voltage ( volt );
+                }
+                else{
+                    float voltage = this->power_supply->get_over_voltage ();
                     printf ( "%.2f\n", voltage );
                 }
             }
-            else if ( strncmp ( command, "ocp" , 3) == 0 )
-            {
-                if ( argc > ( index + 1 ) )
-                {
+            else if ( strncmp ( command, "ocp", 3 ) == 0 ) {
+                if ( argc > ( index + 1 ) ) {
                     // write
                     const char *value = argv[++index];
                     float      curr   = strtof ( value, nullptr );
-                    this->power_supply->set_over_current(curr);
-
-                }else{
-                    float current = this->power_supply->get_over_current();
+                    this->power_supply->set_over_current ( curr );
+                }
+                else{
+                    float current = this->power_supply->get_over_current ();
                     printf ( "%.2f\n", current );
                 }
             }
-            else if ( strncmp ( command, "voltage", 7 ) == 0 )
-            {
-                if ( argc > ( index + 1 ) )
-                {
+            else if ( strncmp ( command, "voltage", 7 ) == 0 ) {
+                if ( argc > ( index + 1 ) ) {
                     // write
                     const char *value = argv[++index];
                     float      volt   = strtof ( value, nullptr );
                     this->power_supply->set_voltage ( volt );
                 }
-                else
-                {
+                else{
                     float voltage;
                     // read
                     voltage = this->power_supply->get_voltage_actual ();
                     printf ( "%.2f\n", voltage );
                 }
             }
-            else if ( strncmp ( command, "current", 7 ) == 0 )
-            {
-                if ( argc > ( index + 1 ) )
-                {
+            else if ( strncmp ( command, "current", 7 ) == 0 ) {
+                if ( argc > ( index + 1 ) ) {
                     // write
                     const char *value  = argv[++index];
                     float      current = strtof ( value, nullptr );
                     this->power_supply->set_current ( current );
                 }
-                else
-                {
+                else{
                     float current;
                     // read
                     current = this->power_supply->get_current_actual ();
@@ -1051,19 +1000,15 @@ int parse_command ( int argc, char **argv )
 
 int run ( int argc, char **argv )
 {
-    for ( int i = 0; i < argc; i++ )
-    {
+    for ( int i = 0; i < argc; i++ ) {
         const char *command = argv[i];
 
-        if ( strncmp ( command, "interactive", 11 ) == 0 )
-        {
+        if ( strncmp ( command, "interactive", 11 ) == 0 ) {
             return this->interactive ();
         }
-        else
-        {
+        else{
             int retv = this->parse_command ( argc - i, &argv[i] );
-            if ( retv < 0 )
-            {
+            if ( retv < 0 ) {
                 std::cerr << "Failed to parse command" << std::endl;
                 return EXIT_FAILURE;
             }
