@@ -16,6 +16,7 @@
  */
 #include <iostream>
 #include <exception>
+#include <sstream>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -396,7 +397,12 @@ private:
             // Throw error.
         }
         telegram_crc_set ();
-        write ( fd, _telegram, _telegram_size );
+        ssize_t result = write ( fd, _telegram, _telegram_size );
+        if ( result != _telegram_size ) {
+            std::stringstream ss;
+            ss << "Failed to send sufficient bytes: " << result << " out of " << _telegram_size;
+            throw PSUError ( ss.str () );
+        }
         syncfs ( fd );
         // check send error.
 
@@ -875,15 +881,30 @@ private:
         }
 
         // Write command to str.
-        write ( fd, command, strlen ( command ) );
+        ssize_t result = write ( fd, command, strlen ( command ) );
+        if ( result != strlen ( command ) ) {
+            std::stringstream ss;
+            ss << "Failed to send sufficient bytes: " << result << " out of " << strlen ( command );
+            throw PSUError ( ss.str () );
+        }
 
         if ( arg != nullptr ) {
             // Send argument.
-            write ( fd, arg, strlen ( arg ) );
+            result = write ( fd, arg, strlen ( arg ) );
+            if ( result != strlen ( arg ) ) {
+                std::stringstream ss;
+                ss << "Failed to send sufficient bytes: " << result << " out of " << strlen ( arg );
+                throw PSUError ( ss.str () );
+            }
         }
 
         // End line
-        write ( fd, "\r", 1 );
+        result = write ( fd, "\r", 1 );
+        if ( result != 1 ) {
+            std::stringstream ss;
+            ss << "Failed to send sufficient bytes: " << result << " out of 1";
+            throw PSUError ( ss.str () );
+        }
     }
 
     size_t read_cmd ( char *buffer, size_t max_length )
