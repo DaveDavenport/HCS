@@ -14,8 +14,10 @@ AM_CXXFLAGS=\
 hcs_SOURCES=\
     src/hcs.cc\
 	src/hcs-ea.cc\
+	src/hcs-pps.cc\
 	include/hcs.h\
-	include/hcs-ea.h
+	include/hcs-ea.h\
+	include/hcs-pps.h
 
 indent: ${hcs_SOURCES}
 	uncrustify -c ${top_srcdir}/data/uncrustify.cfg --replace $^
