@@ -96,6 +96,11 @@ class PPS11360 : public PSU
 public:
     static bool check_supported_type ( const char *vendor_id, const char *product_id )
     {
+        if ( strcmp ( vendor_id, "10c4" ) == 0 ) {
+            if ( strcmp ( product_id, "ea60" ) == 0 ) {
+                return true;
+            }
+        }
         return false;
     }
 
@@ -203,7 +208,7 @@ private:
     void get_voltage_current ( float &voltage, float &current )
     {
         char buffer[1024];
-        this->send_cmd ( "GETS", buffer );
+        this->send_cmd ( "GETS", NULL );
         voltage = current = -1.0;
 
         if ( this->read_cmd ( buffer, 1024 ) > 5 ) {
@@ -376,7 +381,7 @@ public:
                     }
                 }
                 if ( psu_list.size () > dev_num ) {
-                    auto &psu = psu_list[0];
+                    auto &psu = psu_list[dev_num];
                     if ( power_supply != nullptr ) {
                         delete power_supply;
                         power_supply = nullptr;
