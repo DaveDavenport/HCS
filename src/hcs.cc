@@ -1166,7 +1166,6 @@ private:
         struct udev           *ud = udev_new ();
 
         struct udev_enumerate *enumerate = udev_enumerate_new ( ud );
-        udev_enumerate_add_match_property ( enumerate, "ID_VENDOR_ID", "232e" );
         udev_enumerate_add_match_subsystem ( enumerate, "tty" );
         udev_enumerate_scan_devices ( enumerate );
         struct udev_list_entry *list = udev_enumerate_get_list_entry ( enumerate );
