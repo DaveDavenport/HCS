@@ -301,7 +301,7 @@ void EAPS2K::telegram_send ()
         ss << "Failed to send sufficient bytes: " << result << " out of " << _telegram_size;
         throw PSUError ( ss.str () );
     }
-    syncfs ( fd );
+    fsync ( fd );
     // check send error.
 
     // clear telegram.
