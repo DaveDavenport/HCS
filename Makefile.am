@@ -4,6 +4,7 @@
 bin_PROGRAMS=hcs
 
 LIBS=\
+	@libudev_LIBS@\
     -lreadline
 
 AM_CXXFLAGS=\

@@ -1,6 +1,7 @@
 AC_INIT([hcs], [0.14.8], [qball@gmpclient.org])
 
 AC_CONFIG_SRCDIR([src/hcs.cc])
+AC_CONFIG_HEADER([config.h])
 
 ##
 # Setup automake to be silent and in foreign mode.
@@ -24,6 +25,12 @@ AM_PROG_CC_C_O
 AC_CHECK_LIB([readline], [readline])
 AC_CHECK_HEADERS(readline/history.h readline/readline.h)
 
+AC_CHECK_LIB([udev], [udev_new],[
+AC_SUBST(libudev_LIBS, "-ludev")
+AC_CHECK_HEADERS(libudev.h)
+], [
+AC_MSG_NOTICE([UDev is not found, autodetecting power supplies is disabled])
+])
 
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT
