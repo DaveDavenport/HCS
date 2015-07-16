@@ -19,7 +19,7 @@ public:
     void set_current ( float value )  throw ( PSUError & );
     float get_voltage () throw ( PSUError & );
     float get_current () throw ( PSUError & );
-    
+
 
 private:
     void init ();

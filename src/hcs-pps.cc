@@ -52,8 +52,8 @@ size_t PPS11360::read_cmd ( char *buffer, size_t max_length )
                 buffer[size - 3] == 'O' &&
                 buffer[size - 2] == 'K' &&
                 buffer[size - 1] == '\n'
-             )
-          ) {
+                )
+            ) {
         ssize_t v = read ( fd, &buffer[size], max_length - size );
         buffer[size + 1] = '\0';
 

@@ -22,6 +22,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <sys/time.h>
 #include <hcs.h>
 #include <hcs-ea.h>
 
@@ -307,6 +308,7 @@ const char *EAPS2K::telegram_get_error ( ErrorTypes type ) const
 }
 void EAPS2K::telegram_send ()
 {
+    struct timespec start;
     if ( _telegram[0] == 0 ) {
         // Throw error.
     }
@@ -317,12 +319,16 @@ void EAPS2K::telegram_send ()
         ss << "Failed to send sufficient bytes: " << result << " out of " << _telegram_size;
         throw PSUError ( ss.str () );
     }
+    clock_gettime ( CLOCK_REALTIME, &start );
     fsync ( fd );
     // check send error.
 
+    start.tv_nsec += 50e6;
     // clear telegram.
     _telegram[0] = 0;
-    usleep ( 50000 );
+
+    // Sleep until 50ms has passed.
+    clock_nanosleep ( CLOCK_REALTIME, TIMER_ABSTIME, &start, NULL );
     // Receive answer
     telegram_receive ();
     // Check error
@@ -332,8 +338,6 @@ void EAPS2K::telegram_send ()
         name += telegram_get_error ( type );
         throw PSUError ( name );
     }
-    // Check error
-    usleep ( 50000 );
 }
 void EAPS2K::telegram_receive ()
 {

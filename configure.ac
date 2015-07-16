@@ -23,6 +23,7 @@ AM_PROG_CC_C_O
 ##
 
 AC_CHECK_LIB([readline], [readline])
+AC_CHECK_LIB([rt], [clock_nanosleep],[], AC_MSG_ERROR("Require realtime (-lrt) support"))
 AC_CHECK_HEADERS(readline/history.h readline/readline.h)
 
 AC_CHECK_LIB([udev], [udev_new],[

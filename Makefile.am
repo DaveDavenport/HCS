@@ -5,7 +5,8 @@ bin_PROGRAMS=hcs
 
 LIBS=\
 	@libudev_LIBS@\
-    -lreadline
+    -lreadline\
+	-lrt
 
 AM_CXXFLAGS=\
     -I$(top_srcdir)/include/\
