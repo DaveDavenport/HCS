@@ -12,7 +12,10 @@ AM_CXXFLAGS=\
     -I$(top_builddir)/
 
 hcs_SOURCES=\
-    src/hcs.cc
+    src/hcs.cc\
+	src/hcs-ea.cc\
+	include/hcs.h\
+	include/hcs-ea.h
 
 indent: ${hcs_SOURCES}
 	uncrustify -c ${top_srcdir}/data/uncrustify.cfg --replace $^
