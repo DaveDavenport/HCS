@@ -1063,7 +1063,7 @@ public:
             else if ( strncmp ( command, "list", 4 ) == 0 ) {
                 // Find devices.
                 detect_devices ();
-                printf ( "Found %d power suppl%s:\n", psu_list.size (), ( psu_list.size () == 1 ) ? "y" : "ies" );
+                printf ( "Found %zd power suppl%s:\n", psu_list.size (), ( psu_list.size () == 1 ) ? "y" : "ies" );
                 int index = 0;
                 for ( auto psu : psu_list ) {
                     printf ( " [%2d] %s at '%s'\n",
