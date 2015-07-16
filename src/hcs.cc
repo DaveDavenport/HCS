@@ -90,9 +90,20 @@ protected:
 public:
     enum class OperatingMode
     {
+        OFF,
         CV,
-        CC,
+        CC
     };
+    const char *OperatingModeStr[3] = {
+        "Off",
+        "CV",
+        "CC"
+    };
+    const char *get_mode_str ( OperatingMode type )
+    {
+        return OperatingModeStr[static_cast<int>( type )];
+    }
+
     virtual ~PSU()
     {
         if ( fd >= 0 ) {
@@ -626,6 +637,9 @@ public:
         telegram_start ( RECEIVE, 6 );
         telegram_set_object ( STATUS_ACTUAL );
         telegram_send ();
+        if ( ( _telegram[4] & 1 ) == 0 ) {
+            return OperatingMode::OFF;
+        }
         // bits 2+1: 10->CC, 00->CV
         return ( ( _telegram[4] & 6 ) >> 2 ) ? OperatingMode::CC : OperatingMode::CV;
     }
@@ -706,9 +720,12 @@ public:
         printf ( " Set OCP:          %20.02f\n", this->get_over_current () );
         printf ( " Set voltage:      %20.02f\n", this->get_voltage () );
         printf ( " Set current:      %20.02f\n", this->get_current () );
-        printf ( " Current voltage:  %20.02f\n", this->get_voltage_actual () );
-        printf ( " Current current:  %20.02f\n", this->get_current_actual () );
-        printf ( " Current mode:     %20s\n", ( this->get_operating_mode () == OperatingMode::CC ) ? "CC" : "CV" );
+        auto volt = this->get_voltage_actual ();
+        auto curr = this->get_current_actual ();
+        printf ( " Current voltage:  %20.02f\n", volt );
+        printf ( " Current current:  %20.02f\n", curr );
+        printf ( " Current power:    %20.02f\n", volt * curr );
+        printf ( " Current mode:     %20s\n", get_mode_str ( this->get_operating_mode () ) );
     }
 
 
@@ -732,6 +749,7 @@ class PPS11360 : public PSU
 public:
     static bool check_supported_type ( const char *vendor_id, const char *product_id )
     {
+        return false;
     }
 
     PPS11360() : PSU ( B9600 )
@@ -913,9 +931,9 @@ private:
 public:
     ~HCS()
     {
-        if ( this->power_supply != nullptr ) {
-            delete this->power_supply;
-            this->power_supply = nullptr;
+        if ( power_supply != nullptr ) {
+            delete power_supply;
+            power_supply = nullptr;
         }
     }
 
@@ -979,8 +997,8 @@ public:
         const char *command = argv[0];
         try {
             if ( strncmp ( command, "auto", 4 ) == 0 ) {
-                if ( this->power_supply != nullptr ) {
-                    delete this->power_supply;
+                if ( power_supply != nullptr ) {
+                    delete power_supply;
                     power_supply = nullptr;
                 }
                 // Get list of connected devices.
@@ -997,8 +1015,8 @@ public:
                 }
                 if ( psu_list.size () > dev_num ) {
                     auto &psu = psu_list[0];
-                    if ( this->power_supply != nullptr ) {
-                        delete this->power_supply;
+                    if ( power_supply != nullptr ) {
+                        delete power_supply;
                         power_supply = nullptr;
                     }
                     power_supply = psu.connect ();
@@ -1008,18 +1026,18 @@ public:
                 }
             }
             else if ( strncmp ( command, "pps", 3 ) == 0 ) {
-                if ( this->power_supply != nullptr ) {
-                    delete this->power_supply;
+                if ( power_supply != nullptr ) {
+                    delete power_supply;
                 }
-                this->power_supply = new PPS11360 ();
-                this->power_supply->open_device ();
+                power_supply = new PPS11360 ();
+                power_supply->open_device ();
             }
             else if ( strncmp ( command, "eaps", 4 ) == 0 ) {
-                if ( this->power_supply != nullptr ) {
-                    delete this->power_supply;
+                if ( power_supply != nullptr ) {
+                    delete power_supply;
                 }
-                this->power_supply = new EAPS2K ();
-                this->power_supply->open_device ();
+                power_supply = new EAPS2K ();
+                power_supply->open_device ();
             }
             else if ( strncmp ( command, "list", 4 ) == 0 ) {
                 // Find devices.
@@ -1034,25 +1052,25 @@ public:
                     index++;
                 }
             }
-            else if ( this->power_supply != nullptr ) {
+            else if ( power_supply != nullptr ) {
                 if ( strncmp ( command, "status", 6 ) == 0 ) {
-                    this->power_supply->print_device_info ();
+                    power_supply->print_device_info ();
                 }
                 else if ( strncmp ( command, "on", 2 ) == 0 ) {
-                    this->power_supply->state_enable ();
+                    power_supply->state_enable ();
                 }
                 else if ( strncmp ( command, "off", 3 ) == 0 ) {
-                    this->power_supply->state_disable ();
+                    power_supply->state_disable ();
                 }
                 else if ( strncmp ( command, "ovp", 3 ) == 0 ) {
                     if ( argc > ( index + 1 ) ) {
                         // write
                         const char *value = argv[++index];
                         float      volt   = strtof ( value, nullptr );
-                        this->power_supply->set_over_voltage ( volt );
+                        power_supply->set_over_voltage ( volt );
                     }
                     else{
-                        float voltage = this->power_supply->get_over_voltage ();
+                        float voltage = power_supply->get_over_voltage ();
                         printf ( "%.2f\n", voltage );
                     }
                 }
@@ -1061,27 +1079,27 @@ public:
                         // write
                         const char *value = argv[++index];
                         float      curr   = strtof ( value, nullptr );
-                        this->power_supply->set_over_current ( curr );
+                        power_supply->set_over_current ( curr );
                     }
                     else{
-                        float current = this->power_supply->get_over_current ();
+                        float current = power_supply->get_over_current ();
                         printf ( "%.2f\n", current );
                     }
                 }
                 else if ( strncmp ( command, "mode", 4 ) == 0 ) {
-                    printf ( "%s", this->power_supply->get_operating_mode () == PSU::OperatingMode::CC ? "CC" : "CV" );
+                    printf ( "%s", power_supply->get_mode_str ( power_supply->get_operating_mode () ) );
                 }
                 else if ( strncmp ( command, "voltage", 7 ) == 0 ) {
                     if ( argc > ( index + 1 ) ) {
                         // write
                         const char *value = argv[++index];
                         float      volt   = strtof ( value, nullptr );
-                        this->power_supply->set_voltage ( volt );
+                        power_supply->set_voltage ( volt );
                     }
                     else{
                         float voltage;
                         // read
-                        voltage = this->power_supply->get_voltage_actual ();
+                        voltage = power_supply->get_voltage_actual ();
                         printf ( "%.2f\n", voltage );
                     }
                 }
@@ -1090,12 +1108,12 @@ public:
                         // write
                         const char *value  = argv[++index];
                         float      current = strtof ( value, nullptr );
-                        this->power_supply->set_current ( current );
+                        power_supply->set_current ( current );
                     }
                     else{
                         float current;
                         // read
-                        current = this->power_supply->get_current_actual ();
+                        current = power_supply->get_current_actual ();
                         printf ( "%.2f\n", current );
                     }
                 }
@@ -1190,7 +1208,9 @@ private:
             if ( EAPS2K::check_supported_type ( vendor_id, product_id ) ) {
                 psu_list.push_back ( PSU_dev ( PSUTypes::EAPS2K, dev_name ) );
             }
-
+            else if ( PPS11360::check_supported_type ( vendor_id, product_id ) ) {
+                psu_list.push_back ( PSU_dev ( PSUTypes::PPS11360, dev_name ) );
+            }
             // Done with this device
             udev_device_unref ( dev );
         }
