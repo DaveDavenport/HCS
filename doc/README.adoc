@@ -26,6 +26,15 @@ COMMANDS
 --------
 Multiple commands can be specified in one go.
 
+ * *auto*
+Auto connect to first detected power supply.
+
+ * *auto <id>*
+Auto connect to detected power supply with <id>.
+
+ * *list*
+List autodetected power supplies.
+
  * *status*
 Report status from the power supply. (Current voltage, current and active limiter)
 
