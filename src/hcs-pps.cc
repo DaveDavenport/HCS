@@ -117,28 +117,33 @@ float PPS11360::get_current_actual () throw( PSUError & )
     }
     throw PSUError ( "Invalid reply" );
 }
+
+float PPS11360::get_over_voltage() throw ( PSUError & )
+{
+    return -1.0;
+}
+float PPS11360::get_over_current() throw ( PSUError & )
+{
+    return -1.0;
+}
+
 void PPS11360::print_device_info ( void ) throw ( PSUError & )
 {
-    char buffer[1024];
+    printf ( "\nDevice specifications:\n" );
+    PSU::print_device_info ();
+}
+PSU::OperatingMode PPS11360::get_operating_mode () throw ( PSUError & )
+{    char buffer[1024];
     // Send getd mesg.
     this->send_cmd ( "GETD", NULL );
-
-    // Get
     if ( this->read_cmd ( buffer, 1024 ) > 0 ) {
         std::string b       = buffer;
-        float       voltage = strtol ( b.substr ( 0, 3 ).c_str (), 0, 10 ) / 10.0;
-        float       current = strtol ( b.substr ( 4, 7 ).c_str (), 0, 10 ) / 1000.0;
         int         limited = strtol ( b.substr ( 8, 8 ).c_str (), 0, 10 );
-        float       set_voltage, set_current;
-        // read
-        this->get_voltage_current ( set_voltage, set_current );
-
-        printf ( "Volt: %.2f V (Set %.2f V)\n", voltage, set_voltage );
-        printf ( "Curr: %.2f A (Set %.2f A)\n", current, set_current );
-        printf ( "V*C:  %.2f VA\n", voltage * current );
-        printf ( "Lim:  %s\n", ( limited == 0 ) ? "Voltage" : "Current" );
+        return (limited == 0) ? PSU::OperatingMode::CV: PSU::OperatingMode::CC;
     }
+    return OperatingMode::CV;
 }
+
 void PPS11360::set_voltage ( float value )  throw ( PSUError & )
 {
     char buffer[1024];

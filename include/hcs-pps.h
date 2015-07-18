@@ -20,6 +20,10 @@ public:
     float get_voltage () throw ( PSUError & );
     float get_current () throw ( PSUError & );
 
+    float get_over_current() throw ( PSUError & );
+    float get_over_voltage() throw ( PSUError & );
+
+    PSU::OperatingMode get_operating_mode() throw ( PSUError & );
 
 private:
     void init ();

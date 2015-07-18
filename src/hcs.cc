@@ -88,6 +88,21 @@ void PSU::close_device ()
     tcsetattr ( fd, TCSANOW, &oldtio );
     close ( fd );
 }
+void PSU::print_device_info () throw( PSUError & )
+{
+
+    printf ( " Set OVP:          %20.02f\n", this->get_over_voltage () );
+    printf ( " Set OCP:          %20.02f\n", this->get_over_current () );
+    printf ( " Set voltage:      %20.02f\n", this->get_voltage () );
+    printf ( " Set current:      %20.02f\n", this->get_current () );
+    auto volt = this->get_voltage_actual ();
+    auto curr = this->get_current_actual ();
+    printf ( " Current voltage:  %20.02f\n", volt );
+    printf ( " Current current:  %20.02f\n", curr );
+    printf ( " Current power:    %20.02f\n", volt * curr );
+    printf ( " Current mode:     %20s\n", get_mode_str ( this->get_operating_mode () ) );
+
+}
 
 /**
  * Voltcraft Power supply

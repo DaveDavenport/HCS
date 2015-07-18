@@ -208,7 +208,7 @@ public:
      *
      * Print out information about the device.
      */
-    virtual void print_device_info () throw( PSUError & ) = 0;
+    virtual void print_device_info () throw( PSUError & );
 };
 
 #endif

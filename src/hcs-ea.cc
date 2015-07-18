@@ -95,16 +95,7 @@ void EAPS2K::print_device_info () throw( PSUError & )
     printf ( " Nominal current:  %20.02f\n", nominal_current );
     printf ( " Nominal power:    %20.02f\n", nominal_power );
 
-    printf ( " Set OVP:          %20.02f\n", this->get_over_voltage () );
-    printf ( " Set OCP:          %20.02f\n", this->get_over_current () );
-    printf ( " Set voltage:      %20.02f\n", this->get_voltage () );
-    printf ( " Set current:      %20.02f\n", this->get_current () );
-    auto volt = this->get_voltage_actual ();
-    auto curr = this->get_current_actual ();
-    printf ( " Current voltage:  %20.02f\n", volt );
-    printf ( " Current current:  %20.02f\n", curr );
-    printf ( " Current power:    %20.02f\n", volt * curr );
-    printf ( " Current mode:     %20s\n", get_mode_str ( this->get_operating_mode () ) );
+    PSU::print_device_info ();
 }
 bool EAPS2K::check_supported_type ( const char *vendor_id, const char *product_id )
 {
