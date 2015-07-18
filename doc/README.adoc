@@ -89,6 +89,8 @@ SUPPORTED DEVICES
 The following device(s) are known to work:
 
  * Voltcraft PPS-11360
+ * Elektro-Automatik EA-PS 2000 series.
+    - Tested with EA-PS 2042-06 B
 
 
 BUGS
