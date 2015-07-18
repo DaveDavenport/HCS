@@ -1,17 +1,21 @@
-hcs(1)
-======
-:Author: Qball Cow qball@gmpclient.org
-:doctype: manpage
-:home: /main.html
+HCS(1) - CMD line tool to control Voltcraft PPS and EA-PS series Power Supply
+=============================================================================
+:Author:                Qball Cow
+:email:                 qball@gmpclient.org
+:License: 				GPL-v2
+:Source:				http://github.com/DaveDavenport/IfThenElse/
+:home:                  /main.html
 :toc:
 
 
 Name
 ----
+
 hcs - Small command-line tool to control a Voltcraft PPS-11360 Programmable DC Power Supply.
 
 Synopsys
 --------
+
 hcs ['command']
 
 DESCRIPTION
