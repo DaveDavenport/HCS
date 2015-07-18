@@ -59,6 +59,22 @@ Turn the output off.
 
  * *on*
 Turn the output on.
+ 
+ * *mode*
+Get the mode the power supply is currently in, this can be 'CC' (Control Current), 'CV' (Control
+Voltage) and 'Off' (output off).
+
+ * *ocp*
+Get the level the Over current protection will kick in.
+
+ * *ocp <value>*
+Set the level the Over current protection will kick in.
+
+ * *ovp*
+Get the level the Over voltage protection will kick in.
+
+ * *ovp <value>*
+Set the level the Over voltage protection will kick in.
 
  * *interactive*
 Go into interactive mode.
