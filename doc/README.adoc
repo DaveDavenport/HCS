@@ -70,6 +70,30 @@ EXAMPLES
 
 Set the output voltage to 5Volts, the output current limit to 1.3Amps and report the current status.
 
+   ---------------------------------------
+
+    Device information:
+     Device Type:               PS 2042-06B
+     Manufacturer:                       EA
+     Article No. :                 39------
+     Serial Num.:                269-------
+     Software Version:     V4.02 05.12.2012
+
+    Device specifications:
+     Nominal voltage:                 42.00
+     Nominal current:                  6.00
+     Nominal power:                  100.00
+     Set OVP:                         46.20
+     Set OCP:                          6.60
+     Set voltage:                      5.00
+     Set current:                      0.50
+     Current voltage:                  0.00
+     Current current:                  0.00
+     Current power:                    0.00
+     Current mode:                      Off
+
+See status of EA-PS 2042-06 B power supply. 
+
 ENVIRONMENT VARIABLES
 ---------------------
 
