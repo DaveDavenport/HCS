@@ -74,6 +74,7 @@ size_t PPS11360::read_cmd ( char *buffer, size_t max_length )
             return -1;
         }
     }
+    return size;
 }
 
 bool PPS11360::get_state () throw ( PSUError & )
